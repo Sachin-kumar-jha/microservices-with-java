@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductController {
 
-@Autowired
 private final ProductService productService;
 	
 	@PostMapping

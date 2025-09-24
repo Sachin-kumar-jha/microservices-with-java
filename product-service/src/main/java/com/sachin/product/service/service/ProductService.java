@@ -33,7 +33,7 @@ private final ProductRepository productRepository;
 	public List<ProductResponse> getAllProducts(){
 		List<Product> products = productRepository.findAll();
 		
-		return products.stream().map(product->mapToProductResponse(product)).toList();
+		return products.stream().map(this::mapToProductResponse).toList();
 		
 		
 	}
