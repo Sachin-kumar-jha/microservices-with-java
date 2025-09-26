@@ -20,8 +20,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.assertions.Assertions;
-import com.sachin.product.service.dto.ProductRequest;
-import com.sachin.product.service.repository.ProductRepository;
+import com.sachin.dto.ProductRequest;
+import com.sachin.repository.ProductRepository;
 
 
 
