@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +28,7 @@ public class OrderService {
 	private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
 	
-	public void placeOrder(OrderRequest orderRequest) {
+	public ResponseEntity<?> placeOrder(OrderRequest orderRequest) {
 		Order order = new Order();
 		order.setOrderNumber(UUID.randomUUID().toString());
 		
@@ -52,16 +54,17 @@ InventoryResponse[] inventoryResponses=webClientBuilder.build().get()
         .bodyToMono(InventoryResponse[].class)
         .block();
 
-
+if(inventoryResponses.length==0)  return new ResponseEntity<String>("Inventory not present",null, HttpStatus.SC_NO_CONTENT);
         assert inventoryResponses != null;
         boolean allProductsInstock =  Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isInStock);
 
-
+System.out.println("InventorySErvice:"+ " " +allProductsInstock);
 if(allProductsInstock){
     orderRepository.save(order);
 }else{
-    throw new IllegalArgumentException("Product is not in stock ,please try again later");
+	return new ResponseEntity<String>("Product is not in stock ,please try again later",null, HttpStatus.SC_NO_CONTENT);
 }
+return null;
 
 
 	}
