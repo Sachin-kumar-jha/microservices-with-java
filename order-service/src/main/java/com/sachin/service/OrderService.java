@@ -28,7 +28,7 @@ public class OrderService {
 	private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
 	
-	public ResponseEntity<?> placeOrder(OrderRequest orderRequest) {
+	public String placeOrder(OrderRequest orderRequest) {
 		Order order = new Order();
 		order.setOrderNumber(UUID.randomUUID().toString());
 		
@@ -54,7 +54,7 @@ InventoryResponse[] inventoryResponses=webClientBuilder.build().get()
         .bodyToMono(InventoryResponse[].class)
         .block();
 
-if(inventoryResponses.length==0)  return new ResponseEntity<String>("Inventory not present",null, HttpStatus.SC_NO_CONTENT);
+if(inventoryResponses.length==0)  return "Inventory not available out of Stock";
         assert inventoryResponses != null;
         boolean allProductsInstock =  Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isInStock);
 
@@ -62,9 +62,9 @@ System.out.println("InventorySErvice:"+ " " +allProductsInstock);
 if(allProductsInstock){
     orderRepository.save(order);
 }else{
-	return new ResponseEntity<String>("Product is not in stock ,please try again later",null, HttpStatus.SC_NO_CONTENT);
+	return "Product is not in stock ,please try again later";
 }
-return null;
+return "Order placed Succesfully";
 
 
 	}

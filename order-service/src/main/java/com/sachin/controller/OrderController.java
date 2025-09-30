@@ -1,5 +1,7 @@
 package com.sachin.controller;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sachin.dto.OrderRequest;
 import com.sachin.service.OrderService;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,9 +28,16 @@ public class OrderController {
 	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<?> placeOrder(@RequestBody OrderRequest orderRequest) {
-		return orderService.placeOrder(orderRequest);
+	@CircuitBreaker(name="inventory-service",fallbackMethod = "fallbackMethod")
+	@TimeLimiter(name = "inventory-service")
+	@Retry(name = "inventory-service")
+	public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
+		return  CompletableFuture.supplyAsync(()-> orderService.placeOrder(orderRequest)) ;
 //		return "Order Placed Successfully";
 	}
 	
+	public CompletableFuture<String> fallbackMethod(OrderRequest orderRequest,RuntimeException runtimeException){
+		return CompletableFuture.supplyAsync(()->"Something went wrong!,please order after some time!") ;
+		
+	}
 }
