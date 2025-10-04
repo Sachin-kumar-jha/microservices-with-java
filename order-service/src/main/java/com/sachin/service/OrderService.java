@@ -61,10 +61,11 @@ if(inventoryResponses.length==0)  return "Inventory not available out of Stock";
 System.out.println("InventorySErvice:"+ " " +allProductsInstock);
 if(allProductsInstock){
     orderRepository.save(order);
+    return "Order placed Succesfully";
 }else{
 	return "Product is not in stock ,please try again later";
 }
-return "Order placed Succesfully";
+
 
 
 	}
