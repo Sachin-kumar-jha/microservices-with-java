@@ -19,6 +19,9 @@ import com.sachin.model.Order;
 import com.sachin.model.OrderLineItems;
 import com.sachin.repository.OrderRepository;
 
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class OrderService {
 
 	private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
-	
+	private final Tracer tracer;
 	public String placeOrder(OrderRequest orderRequest) {
 		Order order = new Order();
 		order.setOrderNumber(UUID.randomUUID().toString());
@@ -45,26 +48,33 @@ public class OrderService {
         //Call Inventory Service , and place order if product is in
         //Stock
 
+         Span name = tracer.nextSpan().name("InventoryServiceLookup");
+        
+         try(Tracer.SpanInScope spanScope= tracer.withSpan(name.start())){
+        	 InventoryResponse[] inventoryResponses=webClientBuilder.build().get()
+        		        .uri("http://inventory-service/api/inventory",uriBuilder -> uriBuilder.queryParam(
+        		                "skuCode",skuCode).build())
+        		        .retrieve()
+        		        .bodyToMono(InventoryResponse[].class)
+        		        .block();
 
+        		if(inventoryResponses.length==0)  return "Inventory not available out of Stock";
+        		        assert inventoryResponses != null;
+        		        boolean allProductsInstock =  Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isInStock);
 
-InventoryResponse[] inventoryResponses=webClientBuilder.build().get()
-        .uri("http://inventory-service/api/inventory",uriBuilder -> uriBuilder.queryParam(
-                "skuCode",skuCode).build())
-        .retrieve()
-        .bodyToMono(InventoryResponse[].class)
-        .block();
+        		System.out.println("InventorySErvice:"+ " " +allProductsInstock);
+        		if(allProductsInstock){
+        		    orderRepository.save(order);
+        		    return "Order placed Succesfully";
+        		}else{
+        			return "Product is not in stock ,please try again later";
+        		}
 
-if(inventoryResponses.length==0)  return "Inventory not available out of Stock";
-        assert inventoryResponses != null;
-        boolean allProductsInstock =  Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isInStock);
+         }finally {
+        	 name.end();
+         }
+         
 
-System.out.println("InventorySErvice:"+ " " +allProductsInstock);
-if(allProductsInstock){
-    orderRepository.save(order);
-    return "Order placed Succesfully";
-}else{
-	return "Product is not in stock ,please try again later";
-}
 
 
 

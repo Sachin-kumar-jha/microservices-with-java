@@ -3,7 +3,7 @@ package com.sachin.controller;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,7 +33,7 @@ public class OrderController {
 	@Retry(name = "inventory-service")
 	public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
 		return  CompletableFuture.supplyAsync(()-> orderService.placeOrder(orderRequest)) ;
-//		return "Order Placed Successfully";
+		//return orderService.placeOrder(orderRequest);
 	}
 	
 	public CompletableFuture<String> fallbackMethod(OrderRequest orderRequest,RuntimeException runtimeException){
